@@ -2,28 +2,35 @@ package trarelic
 
 import (
 	"net/http"
-
-	"github.com/opentracing/opentracing-go"
 )
 
 // NewRoundTripper creates http.RoundTripper to instrument external requests.
-// The RoundTripper returned creates an external segment before delegating to the original
+// The RoundTripper returned creates an external span with tags (or use existed one) before delegating to the original
 // RoundTripper provided (or http.DefaultTransport if none is provided).
-func NewRoundTripper(original http.RoundTripper) http.RoundTripper {
+func NewRoundTripper(original http.RoundTripper, opts ...TrarelicOption) http.RoundTripper {
+	settings := NewTrarelic(opts...)
+
 	return roundTripperFunc(func(request *http.Request) (*http.Response, error) {
 		// The specification of http.RoundTripper requires that the request is never modified.
+		// And though we don't need the modification right now, in the future this could be useful.
 		request = cloneRequest(request)
 
 		if nil == original {
 			original = http.DefaultTransport
 		}
 
-		span := opentracing.SpanFromContext(request.Context())
+		span := settings.GetSpanFromRequest(request)
 		if span != nil {
 			span.SetTag("is_external", true)
+			span.SetTag("type", settings.Type)
+			span.SetTag("caller", settings.Caller)
 		}
 
 		response, err := original.RoundTrip(request)
+
+		if span != nil && settings.NewSpan {
+			span.Finish()
+		}
 
 		return response, err
 	})
