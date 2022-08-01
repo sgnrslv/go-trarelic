@@ -1,2 +1,42 @@
 ## GO-trarelic
 
+Trarelic creates opentracing span with some tags needed in pulsometer.
+
+This can be achieved by instrumentation via wrapping of http transport.
+
+E.g.:
+
+Wrap existing transport:
+```go
+client := &http.Client{
+	Timeout: 10 * time.Second,
+	Transport: trarelic.NewRoundTripper(
+		&http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	),
+}
+```
+
+http.DefaultTransport will be used by default if nil is passed
+```go
+client := &http.Client{
+	Transport: trarelic.NewRoundTripper(nil),
+}
+```
+
+With functional options: 
+```go
+client := &http.Client{
+	Transport: trarelic.NewRoundTripper(
+		nil,
+		trarelic.WithTracer(opentracing.GlobalTracer()),
+		trarelic.WithNewSpan(true),
+		trarelic.WithType("background"),
+		trarelic.WithCaller("bin/i_am_bin"),
+		trarelic.WithName("some external call"),
+	),
+}
+```
+
+See [godoc](https://pkg.go.dev/github.com/sgnrslv/go-trarelic) for more information.
