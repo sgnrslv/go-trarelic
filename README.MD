@@ -34,7 +34,7 @@ client := &http.Client{
 		trarelic.WithNewSpan(true),
 		trarelic.WithType("background"),
 		trarelic.WithCaller("bin/i_am_bin"),
-		trarelic.WithName("some external call"),
+		trarelic.WithPostfix("additional info about the call"),
 	),
 }
 ```

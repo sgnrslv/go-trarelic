@@ -12,7 +12,7 @@ type Trarelic struct {
 	NewSpan bool
 	Type    string
 	Caller  string
-	Name    string
+	Postfix string
 }
 
 type TrarelicOption func(*Trarelic)
@@ -70,14 +70,13 @@ func WithCaller(caller string) TrarelicOption {
 	}
 }
 
-// WithName redefines new span name to custom one,
-// defaults to external url host.
+// WithPostfix redefines new span name to custom one by adding postfix to external url host.
 // Can be useful in two cases:
 // 1. we need to segregate external requests within one external host, e.g. payout / payout status, etc.
 // 2. external host is not human-readable and custom name is more preferable, e.g. ip
-func WithName(name string) TrarelicOption {
+func WithPostfix(postfix string) TrarelicOption {
 	return func(t *Trarelic) {
-		t.Name = name
+		t.Postfix = postfix
 	}
 }
 
@@ -89,9 +88,9 @@ func (t *Trarelic) GetSpanFromRequest(req *http.Request) opentracing.Span {
 		return parentSpan
 	}
 
-	operationName := ""
-	if t.Name != "" {
-		operationName = req.URL.Host
+	operationName := req.URL.Host
+	if t.Postfix != "" {
+		operationName = operationName + " " + t.Postfix
 	}
 
 	var opts []opentracing.StartSpanOption
