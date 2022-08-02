@@ -1,12 +1,19 @@
 ## GO-trarelic
 
-Trarelic creates opentracing span with some tags needed in pulsometer.
+# Prerequisites
+Opentracing tracer must be instantiated and achievable via `opentracing.GlobalTracer()` or passed directly via option `trarelic.WithTracer()`.
 
-This can be achieved by instrumentation via wrapping of http transport.
+# Description
+Trarelic creates opentracing span with some tags needed in pulsometer:
+- `is_external`
+- `type`
+- `caller`
 
-E.g.:
+You must instrument your code by wrapping the http transport used in external requests.
 
-Wrap existing transport:
+# E.g.:
+
+Wrap existing transport
 ```go
 client := &http.Client{
 	Timeout: 10 * time.Second,
@@ -25,7 +32,7 @@ client := &http.Client{
 }
 ```
 
-With functional options: 
+With functional options 
 ```go
 client := &http.Client{
 	Transport: trarelic.NewRoundTripper(
